@@ -6,13 +6,11 @@ import br.com.alura.screenmatch.model.Serie;
 import br.com.alura.screenmatch.repository.SerieRepository;
 import br.com.alura.screenmatch.service.ConsumoApi;
 import br.com.alura.screenmatch.service.ConverteDados;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Scanner;
-import java.util.stream.Collectors;
 
 public class Principal {
 
@@ -33,6 +31,7 @@ public class Principal {
         var opcao = -1;
         while(opcao != 0) {
             var menu = """
+                    
                     1 - Buscar séries
                     2 - Buscar episódios
                     3 - Listar séries buscadas
