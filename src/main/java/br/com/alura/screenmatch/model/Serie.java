@@ -1,5 +1,6 @@
 package br.com.alura.screenmatch.model;
 
+import br.com.alura.screenmatch.dto.SerieDTO;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -36,14 +37,14 @@ public class Serie {
 
     public Serie (){}
 
-    public Serie(DadosSerie dadosSerie){
-        this.titulo = dadosSerie.titulo();
-        this.totalTemporadas = dadosSerie.totalTemporadas();
-        this.avaliacao = OptionalDouble.of(Double.valueOf(dadosSerie.avaliacao())).orElse(0);
-        this.genero = Categoria.fromString(dadosSerie.genero().split(",")[0].trim());
-        this.atores = dadosSerie.atores();
-        this.poster = dadosSerie.poster();
-        this.sinopse = dadosSerie.sinopse();
+    public Serie(SerieDTO serieDTO) {
+        this.titulo = serieDTO.titulo();
+        this.totalTemporadas = serieDTO.totalTemporadas();
+        this.avaliacao = OptionalDouble.of(Double.valueOf(serieDTO.avaliacao())).orElse(0);
+        this.genero = Categoria.fromString(serieDTO.genero().split(",")[0].trim());
+        this.atores = serieDTO.atores();
+        this.poster = serieDTO.poster();
+        this.sinopse = serieDTO.sinopse();
     }
 
     public String getTitulo() {

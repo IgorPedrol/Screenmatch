@@ -1,7 +1,7 @@
 package br.com.alura.screenmatch.principal;
 
-import br.com.alura.screenmatch.model.DadosSerie;
-import br.com.alura.screenmatch.model.DadosTemporada;
+import br.com.alura.screenmatch.dto.SerieDTO;
+import br.com.alura.screenmatch.dto.TemporadaDTO;
 import br.com.alura.screenmatch.model.Episodio;
 import br.com.alura.screenmatch.model.Serie;
 import br.com.alura.screenmatch.repository.SerieRepository;
@@ -18,7 +18,7 @@ public class Principal {
     private ConverteDados conversor = new ConverteDados();
     private final String ENDERECO = "https://www.omdbapi.com/?t=";
     private final String API_KEY = "&apikey=bb0d748";
-    private List<DadosSerie> dadosSeries = new ArrayList<>();
+    private List<SerieDTO> seryDTOS = new ArrayList<>();
 
     private SerieRepository repositorio;
 
@@ -64,18 +64,18 @@ public class Principal {
         }
     }
 
-    private DadosSerie getDadosSerie() {
+    private SerieDTO getDadosSerie() {
 
         System.out.println("Digite o nome da série para busca");
         var nomeSerie = leitura.nextLine();
         var json = consumo.obterDados(ENDERECO + nomeSerie.replace(" ", "+") + API_KEY);
-        DadosSerie dados = conversor.obterDados(json, DadosSerie.class);
+        SerieDTO dados = conversor.obterDados(json, SerieDTO.class);
         return dados;
     }
 
     private void buscarSerieWeb() {
 
-        DadosSerie dados = getDadosSerie();
+        SerieDTO dados = getDadosSerie();
         Serie serie = new Serie(dados);
         repositorio.save(serie);
         System.out.println(dados);
@@ -95,13 +95,13 @@ public class Principal {
         if (serie.isPresent()) {
 
             var serieEncontrada = serie.get();
-            List<DadosTemporada> temporadas = new ArrayList<>();
+            List<TemporadaDTO> temporadas = new ArrayList<>();
 
             for (int i = 1; i <= serieEncontrada.getTotalTemporadas(); i++) {
                 var json = consumo.obterDados(ENDERECO + serieEncontrada.getTitulo()
                         .replace(" ", "+") + "&season=" + i + API_KEY);
-                DadosTemporada dadosTemporada = conversor.obterDados(json, DadosTemporada.class);
-                temporadas.add(dadosTemporada);
+                TemporadaDTO temporadaDTO = conversor.obterDados(json, TemporadaDTO.class);
+                temporadas.add(temporadaDTO);
             }
             temporadas.forEach(System.out::println);
 
