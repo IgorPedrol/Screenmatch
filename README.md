@@ -579,17 +579,17 @@ No Windows: `mvnw.cmd spring-boot:run`. Também é possível executar a classe `
 
 1
 Digite o nome da série para busca
-Gilmore Girls
-SerieDTO[titulo=Gilmore Girls, totalTemporadas=7, avaliacao=..., genero=Comedy, Drama, Romance, ...]
+Game of Thrones
+SerieDTO[titulo=Game of Thrones, totalTemporadas=8, avaliacao=..., genero=Action, Adventure, Drama, ...]
 
 3
-genero=COMEDIA, titulo='Gilmore Girls', totalTemporadas=7, avaliacao=..., atores='...', poster='...', sinopse='...', episodios='[]'
+genero=ACAO, titulo='Game of Thrones', totalTemporadas=8, avaliacao=..., atores='...', poster='...', sinopse='...', episodios='[]'
 
 2
 (lista as séries salvas)
 De qual série deseja buscar os episódios?
-gilmore
-(busca as 7 temporadas na API e salva os episódios)
+game
+(busca as 8 temporadas na API e salva os episódios)
 ```
 
 *(Saída ilustrativa, os valores variam conforme os dados retornados pela API.)*
@@ -620,6 +620,7 @@ GET https://www.omdbapi.com/?t=gilmore+girls&season=1&apikey=SUA_CHAVE
 ## 🧭 Próximos passos
 
 - [ ] Adicionar consultas ao `SerieRepository` com **Derived Queries** e **JPQL** (busca por título, ator, categoria, top séries, episódios por trecho ou data)
+- [ ] Adicionar e tratar **Exceptions** para consultas mal sucedidas no omdbAPI
 - [ ] Mover a busca de série por título para o banco, em vez de filtrar em memória
 - [ ] Externalizar a chave da API e as credenciais do banco em **variáveis de ambiente**
 - [ ] Adicionar **testes unitários** (JUnit 5 e Mockito)
@@ -635,9 +636,9 @@ GET https://www.omdbapi.com/?t=gilmore+girls&season=1&apikey=SUA_CHAVE
 
 **SEU NOME**
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/SEU_PERFIL)
-[![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/SEU_USUARIO)
-[![Email](https://img.shields.io/badge/Email-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:seu@email.com)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/igorpedrol)
+[![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/IgorPedrol)
+[![Email](https://img.shields.io/badge/Email-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:igorefpedrol@email.com)
 
 ---
 
