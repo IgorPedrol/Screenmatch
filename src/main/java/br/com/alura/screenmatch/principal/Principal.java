@@ -11,21 +11,23 @@ import br.com.alura.screenmatch.service.ConverteDados;
 import java.util.*;
 import java.util.stream.Collectors;
 
+
 public class Principal {
 
     private Scanner leitura = new Scanner(System.in);
     private ConsumoApi consumo = new ConsumoApi();
     private ConverteDados conversor = new ConverteDados();
     private final String ENDERECO = "https://www.omdbapi.com/?t=";
-    private final String API_KEY = "&apikey=bb0d748";
-    private List<SerieDTO> seryDTOS = new ArrayList<>();
+    private final String API_KEY;
+    private List<SerieDTO> serieDTOS = new ArrayList<>();
 
     private SerieRepository repositorio;
 
     private List<Serie> series = new ArrayList<>();
 
-    public Principal(SerieRepository repositorio) {
+    public Principal(SerieRepository repositorio, String apiKey) {
         this.repositorio = repositorio;
+        this.API_KEY = apiKey;
     }
 
     public void exibeMenu() {

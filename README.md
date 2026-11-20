@@ -304,6 +304,7 @@ ScreenMatch/
 │   │       └── application.properties
 │   └── test/
 ├── .gitignore
+├── .env (local)
 ├── mvnw
 ├── mvnw.cmd
 ├── pom.xml
