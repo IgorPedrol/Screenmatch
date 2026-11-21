@@ -16,7 +16,7 @@ public class Episodio {
     @Column(nullable = false)
     private Integer temporada;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String titulo;
 
     @Column(nullable = false)
