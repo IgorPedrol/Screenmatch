@@ -2,6 +2,8 @@ package br.com.alura.screenmatch.model;
 
 import br.com.alura.screenmatch.dto.EpisodioDTO;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -13,6 +15,7 @@ public class Episodio {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JdbcTypeCode(SqlTypes.SMALLINT)
     @Column(nullable = false)
     private Integer temporada;
 

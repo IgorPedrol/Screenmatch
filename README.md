@@ -5,8 +5,9 @@
 **Aplicação Java com Spring Boot que consome a API OMDb, busca séries e episódios e persiste tudo em PostgreSQL para consultas futuras.**
 
 ![Java](https://img.shields.io/badge/Java-17+-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
-![Spring Boot](https://img.shields.io/badge/Spring_Boot-4.x-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![Flyway](https://img.shields.io/badge/Flyway-CC0200?style=for-the-badge&logo=flyway&logoColor=white)
 ![Maven](https://img.shields.io/badge/Maven-C71A36?style=for-the-badge&logo=apachemaven&logoColor=white)
 ![Hibernate](https://img.shields.io/badge/JPA%2FHibernate-59666C?style=for-the-badge&logo=hibernate&logoColor=white)
 ![Status](https://img.shields.io/badge/status-em_evolução-yellow?style=for-the-badge)
@@ -45,6 +46,7 @@ Neste projeto, pratiquei em conjunto:
 - organização do código em **camadas** (`model`, `repository`, `service`, `dto`);
 - injeção de dependência com **Spring Boot**;
 - gerenciamento de dependências e build com **Maven**.
+- versionamento do banco de dados com **Flyway** (migrations SQL) e validação do schema pelo Hibernate;
 
 ---
 
@@ -73,6 +75,7 @@ O menu interativo no console oferece cinco operações:
 | **Linguagem**            | Java 17+ (`record`, text blocks, Streams, `Optional`)              |
 | **Framework**            | Spring Framework e Spring Boot (`CommandLineRunner`, `@Autowired`) |
 | **Persistência**         | Spring Data JPA (`JpaRepository` e Derived Queries), Hibernate     |
+| **Migrations**           | Flyway (`flyway-core`)                                             |
 | **Banco de dados**       | PostgreSQL e SQL                                                   |
 | **Build e dependências** | Maven (com Maven Wrapper)                                          |
 | **Integração externa**   | OMDb API consumida com `java.net.http.HttpClient`                  |
@@ -286,8 +289,8 @@ erDiagram
 
     SERIES {
         bigint id PK
-        varchar titulo UK
-        int total_temporadas
+        varchar titulo
+        smallint total_temporadas
         double avaliacao
         varchar genero "enum Categoria"
         varchar atores
@@ -297,14 +300,40 @@ erDiagram
 
     EPISODIOS {
         bigint id PK
-        int temporada
-        varchar titulo UK
+        smallint temporada
+        varchar titulo
         int numero_episodio
         double avaliacao
         date data_lancamento
         bigint serie_id FK
     }
 ```
+
+### Versionamento do banco com Flyway
+
+O schema **não é mais gerado pelo Hibernate**. Ele é definido por migrations SQL versionadas em
+`src/main/resources/db/migration/`, e o Hibernate apenas **valida** se as entidades batem com o banco (
+`ddl-auto=validate`).
+
+```mermaid
+flowchart LR
+    A(["▶️ Aplicação inicia"]) --> B["Flyway<br/>consulta flyway_schema_history"]
+    B --> C{"Existem migrations<br/>pendentes?"}
+    C -->|"Sim"| D["Executa as migrations<br/>em ordem de versão"]
+    C -->|"Não"| E["Nada a fazer"]
+    D --> F["Hibernate<br/>valida as entidades"]
+    E --> F
+    F -->|"Entidades batem<br/>com o schema"| G(["📋 Menu do ScreenMatch"])
+    F -->|"Divergência"| H(["❌ Falha ao iniciar"])
+```
+
+| Regra                                                                 | Motivo                                                       |
+|-----------------------------------------------------------------------|--------------------------------------------------------------|
+| Nome no padrão `V<versão>__<descrição>.sql` (dois underscores)        | Fora desse padrão o Flyway não reconhece o arquivo           |
+| Nunca editar uma migration já aplicada                                | O Flyway guarda o checksum e recusa subir se o arquivo mudar |
+| Toda mudança de schema vira uma nova migration (`V2__...`, `V3__...`) | Histórico auditável e reproduzível em qualquer ambiente      |
+
+O histórico de execuções fica na tabela `flyway_schema_history`.
 
 ### Categorias (enum `Categoria`)
 
@@ -374,7 +403,9 @@ ScreenMatch/
 │   │   │       ├── ConverteDados.java      # Desserialização JSON
 │   │   │       └── IConverteDados.java     # Contrato (interface)
 │   │   └── resources/
-│   │       └── application.properties
+│   │       ├── application.properties
+│   │       └── db/migration/
+│   │           └── V1__screenmatch_db_migration.sql   # Schema inicial (Flyway)
 │   └── test/
 ├── .gitignore
 ├── .env (local)
@@ -452,8 +483,12 @@ public class Serie {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true)
+    @Column(nullable = false)
     private String titulo;
+
+    @JdbcTypeCode(SqlTypes.SMALLINT)
+    @Column(nullable = false)
+    private Integer totalTemporadas;
 
     @Enumerated(EnumType.STRING)
     private Categoria genero;
@@ -611,6 +646,39 @@ public interface SerieRepository extends JpaRepository<Serie, Long> {
 }
 ```
 
+### 11. Migrations versionadas com Flyway
+
+```sql
+-- V1__screenmatch_db_migration.sql
+CREATE TABLE series (
+    id               BIGINT GENERATED BY DEFAULT AS IDENTITY,
+    titulo           VARCHAR(255) NOT NULL,
+    total_temporadas SMALLINT NOT NULL,
+    avaliacao        DOUBLE PRECISION,
+    genero           VARCHAR(255),
+    atores           VARCHAR(255),
+    poster           VARCHAR(255),
+    sinopse          VARCHAR(255),
+    CONSTRAINT pk_series PRIMARY KEY (id)
+);
+```
+
+Como o schema agora é do Flyway, o Hibernate é configurado só para validar. Quando a entidade usa um tipo diferente do
+padrão (aqui, `SMALLINT` no banco para um `Integer` no Java), o mapeamento é explicitado:
+
+```java
+
+@JdbcTypeCode(SqlTypes.SMALLINT)
+private Integer totalTemporadas;
+```
+
+```properties
+spring.jpa.hibernate.ddl-auto=validate
+```
+
+Com `validate`, qualquer divergência entre entidade e migration derruba a aplicação na inicialização, o que funciona
+como um teste automático de consistência do schema.
+
 Apenas estendendo `JpaRepository`, o Spring fornece `save`, `findAll`, `findById`, `delete` e outros métodos sem nenhuma implementação manual.
 
 Os dois métodos declarados são **derived queries**: não há SQL nem JPQL escrito à mão. O Spring Data lê o nome do método
@@ -649,24 +717,36 @@ git clone https://github.com/SEU_USUARIO/ScreenMatch.git
 cd ScreenMatch
 ```
 
-**2. Crie o banco de dados**
+**2. Crie o banco de dados (vazio)**
 
 ```sql
 CREATE DATABASE screenmatch;
 ```
 
+> Não é preciso criar as tabelas: o Flyway as cria automaticamente na primeira execução.
+
 **3. Configure o acesso ao banco** em `src/main/resources/application.properties`:
 
 ```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/screenmatch
-spring.datasource.username=SEU_USUARIO_DO_BANCO
-spring.datasource.password=SUA_SENHA_DO_BANCO
+spring.datasource.url=jdbc:postgresql://${DB_HOST}/${DB_NAME}
+spring.datasource.username=${DB_USER}
+spring.datasource.password=${DB_PASSWORD}
+spring.config.import=optional:file:.env[.properties]
+api.key=${API_KEY}
+## PostgreSQL configuration
 spring.datasource.driver-class-name=org.postgresql.Driver
-
-spring.jpa.hibernate.ddl-auto=update
+hibernate.dialect=org.hibernate.dialect.HSQLDialect
+## SQL configuration
+spring.jpa.show-sql=true
+spring.jpa.format-sql=true
+spring.jpa.hibernate.ddl-auto=validate
+## Flyway
+spring.flyway.validate-migration-naming=true
 ```
 
-> Com `ddl-auto=update`, o Hibernate cria as tabelas `series` e `episodios` automaticamente na primeira execução.
+> O Hibernate **não cria mais as tabelas**. Na primeira execução, o Flyway aplica a migration
+`V1__screenmatch_db_migration.sql` e cria `series`, `episodios` e a tabela de controle `flyway_schema_history`. O
+> Hibernate então valida se as entidades correspondem ao schema.
 
 **4. Informe sua chave da OMDb** na constante `API_KEY` do .env:
 
@@ -737,12 +817,17 @@ GET https://www.omdbapi.com/?t=gilmore+girls&season=1&apikey=SUA_CHAVE
 - **PostgreSQL e SQL**: modelagem relacional, chave primária e estrangeira, restrições de unicidade.
 - **Java moderno**: `record`, text blocks, Streams (`flatMap`, `sorted`, `filter`), `Optional` e `enum` com atributos.
 - **Arquitetura**: separação em camadas, uso de DTO e organização por responsabilidade.
+- **Flyway**: migrations versionadas (`V1__...sql`), tabela `flyway_schema_history`, regras de imutabilidade e
+  integração com o Spring Boot (`flyway-core` e `flyway-database-postgresql`).
+- **Hibernate `ddl-auto=validate`**: validar o schema criado por migrations e mapear tipos específicos com
+  `@JdbcTypeCode(SqlTypes.SMALLINT)`.
 
 ---
 
 ## 🧭 Próximos passos
 
 - [x] Consultas com **Derived Queries**: busca de séries por título e por ator
+- [x] Versionar o schema do banco com **Flyway**
 - [ ] Novas consultas com **Derived Queries** e **JPQL** (categoria, top séries, filtro por temporadas e avaliação,
   episódios por trecho ou data)
 - [ ] Adicionar e tratar **Exceptions** para consultas mal sucedidas no omdbAPI
