@@ -452,7 +452,29 @@ public enum Categoria {
     COMEDIA("Comedy"),
     DRAMA("Drama"),
     CRIME("Crime"),
-    ANIMACAO("Animation");
+    ANIMACAO("Animation"),
+    ADULTO("Adult"),
+    AVENTURA("Adventure"),
+    BIOGRAFIA("Biography"),
+    DOCUMENTARIO("Documentary"),
+    FAMILIA("Family"),
+    FANTASIA("Fantasy"),
+    FILME_NOIR("Film-Noir"),
+    PROGRAMA_DE_JOGOS("Game-Show"),
+    HISTORIA("History"),
+    TERROR("Horror"),
+    MUSICA("Music"),
+    MUSICAL("Musical"),
+    MISTERIO("Mystery"),
+    NOTICIAS("News"),
+    REALITY_TV("Reality-TV"),
+    FICCAO_CIENTIFICA("Sci-Fi"),
+    CURTA("Short"),
+    ESPORTE("Sport"),
+    TALK_SHOW("Talk-Show"),
+    SUSPENSE("Thriller"),
+    GUERRA("War"),
+    FAROESTE("Western");
 
     private String categoriaOmdb;
 
