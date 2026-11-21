@@ -38,33 +38,35 @@ public class Principal {
                     1 - Buscar séries
                     2 - Buscar episódios
                     3 - Listar séries buscadas
+                    4 - Buscar série por título
+                    5 - Buscar séries por ator
                                     
                     0 - Sair       
                                              
                     """;
 
             System.out.println(menu);
-            opcao = leitura.nextInt();
-            leitura.nextLine();
+
+            try {
+                opcao = Integer.parseInt(leitura.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Opção inválida! Digite apenas o número correspondente ao menu.\n");
+                continue;
+            }
 
             switch (opcao) {
-                case 1:
-                    buscarSerieWeb();
-                    break;
-                case 2:
-                    buscarEpisodioPorSerie();
-                    break;
-                case 3:
-                    listarSeriesBuscadas();
-                    break;
-                case 0:
-                    System.out.println("Saindo...");
-                    break;
-                default:
-                    System.out.println("Opção inválida");
+                case 1 -> buscarSerieWeb();
+                case 2 -> buscarEpisodioPorSerie();
+                case 3 -> listarSeriesBuscadas();
+                case 4 -> buscarSeriePorTitulo();
+                case 5 -> buscarSeriesPorAtor();
+                case 0 -> System.out.println("Saindo...");
+                default -> System.out.println("Opção inválida! Escolha um número disponível no menu.\n");
             }
         }
     }
+
+
 
     private SerieDTO getDadosSerie() {
 
@@ -75,6 +77,7 @@ public class Principal {
         return dados;
     }
 
+
     private void buscarSerieWeb() {
 
         SerieDTO dados = getDadosSerie();
@@ -82,6 +85,7 @@ public class Principal {
         repositorio.save(serie);
         System.out.println(dados);
     }
+
 
     private void buscarEpisodioPorSerie(){
 
@@ -122,6 +126,7 @@ public class Principal {
 
     }
 
+
     private void listarSeriesBuscadas(){
 
         series = repositorio.findAll();
@@ -129,4 +134,41 @@ public class Principal {
                 .sorted(Comparator.comparing(Serie::getGenero))
                 .forEach(System.out::println);
     }
+
+
+    private void buscarSeriePorTitulo() {
+        System.out.println("Escolha uma série pelo nome: ");
+        var nomeSerie = leitura.nextLine();
+        Optional<Serie> serieBuscada = repositorio.findByTituloContainingIgnoreCase(nomeSerie);
+
+        if (serieBuscada.isPresent()) {
+            System.out.println("Dados da série: " + serieBuscada.get());
+        } else {
+            System.out.println("Série não encontrada!");
+        }
+    }
+
+
+    private void buscarSeriesPorAtor() {
+        System.out.println("Insira um Ator para buscar suas séries: ");
+        var nomeAtor = leitura.nextLine();
+        List<Serie> seriesBuscadas = repositorio.findByAtoresContainingIgnoreCase(nomeAtor);
+
+        if (seriesBuscadas.isEmpty()) {
+            System.out.println("Nenhuma série encontrada com o ator: " + nomeAtor.toUpperCase());
+        } else {
+            System.out.println("\nSéries em que " + nomeAtor + " trabalhou:\n");
+            seriesBuscadas.forEach(s -> System.out.printf(
+                    """
+                            Série: %s
+                            Temporadas: %d
+                            Avaliação: %.1f ⭐
+                            -------------------------------%n""",
+                    s.getTitulo(),
+                    s.getTotalTemporadas(),
+                    s.getAvaliacao()
+        ));
+        }
+    }
+
 }
