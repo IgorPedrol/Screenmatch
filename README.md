@@ -41,7 +41,7 @@ Neste projeto, pratiquei em conjunto:
 
 - consumo de API externa e tratamento da resposta JSON;
 - mapeamento objeto-relacional com **JPA/Hibernate**, incluindo relacionamento 1:N com persistência em cascata;
-- persistência com **Spring Data JPA**;
+- persistência com **Spring Data JPA**, incluindo consultas por **Derived Queries**;
 - organização do código em **camadas** (`model`, `repository`, `service`, `dto`);
 - injeção de dependência com **Spring Boot**;
 - gerenciamento de dependências e build com **Maven**.
@@ -50,31 +50,34 @@ Neste projeto, pratiquei em conjunto:
 
 ## ✨ Funcionalidades
 
-O menu interativo no console oferece três operações:
+O menu interativo no console oferece cinco operações:
 
-| Opção | Funcionalidade | O que acontece |
-|:-----:|----------------|----------------|
-| **1** | **Buscar séries** | Pergunta o nome da série, consulta a OMDb API, converte a resposta em uma entidade `Serie` e a salva no banco |
-| **2** | **Buscar episódios** | Lista as séries salvas, pergunta de qual buscar os episódios (aceita parte do nome, sem diferenciar maiúsculas de minúsculas), busca **todas as temporadas** na API, converte em entidades `Episodio` e salva vinculados à série |
-| **3** | **Listar séries buscadas** | Lê todas as séries do banco e as exibe **ordenadas por gênero** |
-| **0** | **Sair** | Encerra a aplicação |
+| Opção | Funcionalidade              | O que acontece                                                                                                                                                                                                                   |
+|:-----:|-----------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **1** | **Buscar séries**           | Pergunta o nome da série, consulta a OMDb API, converte a resposta em uma entidade `Serie` e a salva no banco                                                                                                                    |
+| **2** | **Buscar episódios**        | Lista as séries salvas, pergunta de qual buscar os episódios (aceita parte do nome, sem diferenciar maiúsculas de minúsculas), busca **todas as temporadas** na API, converte em entidades `Episodio` e salva vinculados à série |
+| **3** | **Listar séries buscadas**  | Lê todas as séries do banco e as exibe **ordenadas por gênero**                                                                                                                                                                  |
+| **4** | **Buscar série por título** | Pesquisa no banco por parte do título, sem diferenciar maiúsculas de minúsculas, usando a *derived query* `findByTituloContainingIgnoreCase`                                                                                     |
+| **5** | **Buscar séries por ator**  | Recebe o nome (ou parte do nome) de um ator ou atriz e retorna, direto do banco, todas as séries salvas em que ele ou ela trabalhou, usando a *derived query* `findByAtoresContainingIgnoreCase`                                 |
+| **0** | **Sair**                    | Encerra a aplicação                                                                                                                                                                                                              |
 
-> 💡 A API só é chamada nas opções 1 e 2. A listagem (opção 3) usa exclusivamente o banco de dados.
+> 💡 A API só é chamada nas opções 1 e 2. As opções 3, 4 e 5 consultam exclusivamente o banco de dados, por isso só
+> encontram séries que já foram buscadas pela opção 1.
 
 ---
 
 ## 🛠 Tecnologias e conceitos
 
-| Categoria | Tecnologia / Conceito |
-|-----------|----------------------|
-| **Linguagem** | Java 17+ (`record`, text blocks, Streams, `Optional`) |
-| **Framework** | Spring Framework e Spring Boot (`CommandLineRunner`, `@Autowired`) |
-| **Persistência** | Spring Data JPA, Hibernate |
-| **Banco de dados** | PostgreSQL e SQL |
-| **Build e dependências** | Maven (com Maven Wrapper) |
-| **Integração externa** | OMDb API consumida com `java.net.http.HttpClient` |
-| **Serialização JSON** | Jackson (`ObjectMapper`, `@JsonAlias`, `@JsonIgnoreProperties`) |
-| **Padrões** | Arquitetura em camadas, DTO, Repository, Injeção de Dependência |
+| Categoria                | Tecnologia / Conceito                                              |
+|--------------------------|--------------------------------------------------------------------|
+| **Linguagem**            | Java 17+ (`record`, text blocks, Streams, `Optional`)              |
+| **Framework**            | Spring Framework e Spring Boot (`CommandLineRunner`, `@Autowired`) |
+| **Persistência**         | Spring Data JPA (`JpaRepository` e Derived Queries), Hibernate     |
+| **Banco de dados**       | PostgreSQL e SQL                                                   |
+| **Build e dependências** | Maven (com Maven Wrapper)                                          |
+| **Integração externa**   | OMDb API consumida com `java.net.http.HttpClient`                  |
+| **Serialização JSON**    | Jackson (`ObjectMapper`, `@JsonAlias`, `@JsonIgnoreProperties`)    |
+| **Padrões**              | Arquitetura em camadas, DTO, Repository, Injeção de Dependência    |
 
 ---
 
@@ -112,7 +115,7 @@ flowchart TB
         end
 
         subgraph REPO["repository"]
-            R1["SerieRepository<br/>extends JpaRepository"]
+            R1["SerieRepository<br/>extends JpaRepository<br/>derived queries"]
         end
     end
 
@@ -133,13 +136,13 @@ flowchart TB
 
 ### Responsabilidade de cada camada
 
-| Pacote | Classes | Responsabilidade |
-|--------|---------|------------------|
-| **`principal`** | `Principal` | Interação com o usuário (menu no console) e orquestração do fluxo entre API, conversão e banco |
-| **`service`** | `ConsumoApi`, `ConverteDados`, `IConverteDados` | Faz a requisição HTTP e converte o JSON em objetos (a conversão é genérica e reutilizável) |
-| **`dto`** | `SerieDTO`, `TemporadaDTO`, `EpisodioDTO` | *Records* imutáveis que espelham exatamente o formato da resposta da OMDb API |
-| **`model`** | `Serie`, `Episodio`, `Categoria` | Entidades JPA que representam as tabelas, mais o enum de gêneros do domínio |
-| **`repository`** | `SerieRepository` | Acesso ao banco via Spring Data JPA |
+| Pacote           | Classes                                         | Responsabilidade                                                                                                                    |
+|------------------|-------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|
+| **`principal`**  | `Principal`                                     | Interação com o usuário (menu no console) e orquestração do fluxo entre API, conversão e banco                                      |
+| **`service`**    | `ConsumoApi`, `ConverteDados`, `IConverteDados` | Faz a requisição HTTP e converte o JSON em objetos (a conversão é genérica e reutilizável)                                          |
+| **`dto`**        | `SerieDTO`, `TemporadaDTO`, `EpisodioDTO`       | *Records* imutáveis que espelham exatamente o formato da resposta da OMDb API                                                       |
+| **`model`**      | `Serie`, `Episodio`, `Categoria`                | Entidades JPA que representam as tabelas, mais o enum de gêneros do domínio                                                         |
+| **`repository`** | `SerieRepository`                               | Acesso ao banco via Spring Data JPA: métodos prontos do `JpaRepository` e consultas derivadas do nome do método (*derived queries*) |
 
 > **Por que separar DTO e Model?** O DTO espelha o contrato da API externa (nomes em inglês, números como `String`, datas como texto). A entidade representa o que o *meu* sistema armazena, já com tipos corretos (`Double`, `LocalDate`, `Categoria`). A conversão acontece nos construtores das entidades, isolando o domínio de mudanças na API.
 
@@ -155,6 +158,8 @@ flowchart TD
     MENU -->|"1"| S1["Buscar séries"]
     MENU -->|"2"| S2["Buscar episódios"]
     MENU -->|"3"| S3["Listar séries buscadas"]
+    MENU -->|"4"| S4["Buscar série por título"]
+    MENU -->|"5"| S5["Buscar séries por ator"]
     MENU -->|"0"| END(["🛑 Sair"])
 
     S1 --> API1[["OMDb API"]]
@@ -164,10 +169,16 @@ flowchart TD
     API2 --> SAVE2[("Salva Episodios no PostgreSQL")]
     S3 --> DB3[("Lê séries do PostgreSQL")]
     DB3 --> OUT["Exibe ordenadas por gênero"]
+    S4 --> DB4[("Consulta por título no PostgreSQL")]
+    DB4 --> OUT4["Exibe a série encontrada"]
+    S5 --> DB5[("Consulta por ator no PostgreSQL")]
+    DB5 --> OUT5["Exibe as séries do ator ou atriz"]
 
     SAVE1 --> MENU
     SAVE2 --> MENU
     OUT --> MENU
+    OUT4 --> MENU
+    OUT5 --> MENU
 ```
 
 ### Opção 1: buscar uma série
@@ -228,6 +239,41 @@ sequenceDiagram
 
 `SerieRepository.findAll()` → `PostgreSQL` → lista ordenada com `Comparator.comparing(Serie::getGenero)` → impressão no console.
 
+### Opções 4 e 5: consultas por título e por ator (Derived Queries)
+
+Nessas opções **não há chamada à API**: a consulta é feita direto no PostgreSQL. O Spring Data JPA gera a query a partir
+do nome do método declarado no `SerieRepository`.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as Usuário
+    participant P as Principal
+    participant R as SerieRepository
+    participant H as Spring Data e Hibernate
+    participant DB as PostgreSQL
+
+    U->>P: Escolhe a opção 4 ou 5 e informa o texto da busca
+
+    alt Opção 4, buscar série por título
+        P->>R: findByTituloContainingIgnoreCase(nomeSerie)
+        R->>H: Gera a consulta a partir do nome do método
+        H->>DB: SELECT na tabela series filtrando por titulo
+        DB-->>H: Registro encontrado ou nenhum
+        H-->>R: Optional de Serie
+        R-->>P: Optional de Serie
+        P-->>U: Exibe a série ou informa que não foi encontrada
+    else Opção 5, buscar séries por ator ou atriz
+        P->>R: findByAtoresContainingIgnoreCase(nomeAtor)
+        R->>H: Gera a consulta a partir do nome do método
+        H->>DB: SELECT na tabela series filtrando por atores
+        DB-->>H: Séries encontradas
+        H-->>R: List de Serie
+        R-->>P: List de Serie
+        P-->>U: Exibe as séries em que o ator ou atriz trabalhou
+    end
+```
+
 ---
 
 ## 🗄 Modelo de dados
@@ -264,14 +310,41 @@ erDiagram
 
 O gênero retornado pela OMDb vem em inglês e pode conter vários valores (ex.: `"Comedy, Drama"`). O sistema usa o **primeiro gênero** e o traduz para uma categoria própria:
 
-| Enum | Valor na OMDb |
-|------|---------------|
-| `ACAO` | Action |
-| `ROMANCE` | Romance |
-| `COMEDIA` | Comedy |
-| `DRAMA` | Drama |
-| `CRIME` | Crime |
-| `ANIMACAO` | Animation |
+<details>
+<summary><b>Ver as 28 categorias suportadas</b></summary>
+
+| Enum                | Valor na OMDb |
+|---------------------|---------------|
+| `ACAO`              | Action        |
+| `ROMANCE`           | Romance       |
+| `COMEDIA`           | Comedy        |
+| `DRAMA`             | Drama         |
+| `CRIME`             | Crime         |
+| `ANIMACAO`          | Animation     |
+| `ADULTO`            | Adult         |
+| `AVENTURA`          | Adventure     |
+| `BIOGRAFIA`         | Biography     |
+| `DOCUMENTARIO`      | Documentary   |
+| `FAMILIA`           | Family        |
+| `FANTASIA`          | Fantasy       |
+| `FILME_NOIR`        | Film-Noir     |
+| `PROGRAMA_DE_JOGOS` | Game-Show     |
+| `HISTORIA`          | History       |
+| `TERROR`            | Horror        |
+| `MUSICA`            | Music         |
+| `MUSICAL`           | Musical       |
+| `MISTERIO`          | Mystery       |
+| `NOTICIAS`          | News          |
+| `REALITY_TV`        | Reality-TV    |
+| `FICCAO_CIENTIFICA` | Sci-Fi        |
+| `CURTA`             | Short         |
+| `ESPORTE`           | Sport         |
+| `TALK_SHOW`         | Talk-Show     |
+| `SUSPENSE`          | Thriller      |
+| `GUERRA`            | War           |
+| `FAROESTE`          | Western       |
+
+</details>
 
 ---
 
@@ -295,7 +368,7 @@ ScreenMatch/
 │   │   │   ├── principal/
 │   │   │   │   └── Principal.java          # Menu e fluxo de interação
 │   │   │   ├── repository/
-│   │   │   │   └── SerieRepository.java    # JpaRepository
+│   │   │   │   └── SerieRepository.java    # JpaRepository + Derived Queries
 │   │   │   └── service/
 │   │   │       ├── ConsumoApi.java         # Requisições HTTP
 │   │   │       ├── ConverteDados.java      # Desserialização JSON
@@ -527,14 +600,34 @@ public class ScreenmatchApplication implements CommandLineRunner {
 }
 ```
 
-### 10. Repository com Spring Data JPA
+### 10. Repository com Spring Data JPA e Derived Queries
 
 ```java
 public interface SerieRepository extends JpaRepository<Serie, Long> {
+
+    Optional<Serie> findByTituloContainingIgnoreCase(String nomeSerie);
+
+    List<Serie> findByAtoresContainingIgnoreCase(String nomeAtor);
 }
 ```
 
 Apenas estendendo `JpaRepository`, o Spring fornece `save`, `findAll`, `findById`, `delete` e outros métodos sem nenhuma implementação manual.
+
+Os dois métodos declarados são **derived queries**: não há SQL nem JPQL escrito à mão. O Spring Data lê o nome do método
+e monta a consulta sozinho:
+
+| Trecho do nome      | Significado                                                              |
+|---------------------|--------------------------------------------------------------------------|
+| `findBy`            | Inicia uma consulta de busca                                             |
+| `Titulo` / `Atores` | Campo da entidade `Serie` usado no filtro                                |
+| `Containing`        | O campo **contém** o texto informado (equivalente a um `LIKE '%texto%'`) |
+| `IgnoreCase`        | Ignora diferença entre maiúsculas e minúsculas                           |
+
+Como o campo `atores` guarda o elenco retornado pela OMDb em um único texto (ex.:
+`"Emilia Clarke, Peter Dinklage, ..."`), buscar por `"clarke"` ou por `"Emilia Clarke"` encontra a mesma série.
+
+O tipo de retorno também faz parte do contrato: `Optional<Serie>` para a busca por título (que pode não encontrar nada)
+e `List<Serie>` para a busca por ator (que pode retornar várias séries).
 
 ---
 
@@ -575,11 +668,7 @@ spring.jpa.hibernate.ddl-auto=update
 
 > Com `ddl-auto=update`, o Hibernate cria as tabelas `series` e `episodios` automaticamente na primeira execução.
 
-**4. Informe sua chave da OMDb** na constante `API_KEY` da classe `Principal`:
-
-```java
-private final String API_KEY = "&apikey=SUA_CHAVE_AQUI";
-```
+**4. Informe sua chave da OMDb** na constante `API_KEY` do .env:
 
 **5. Execute a aplicação**
 
@@ -597,6 +686,8 @@ No Windows: `mvnw.cmd spring-boot:run`. Também é possível executar a classe `
 1 - Buscar séries
 2 - Buscar episódios
 3 - Listar séries buscadas
+4 - Buscar série por título
+5 - Buscar séries por ator
 
 0 - Sair
 
@@ -613,6 +704,14 @@ genero=ACAO, titulo='Game of Thrones', totalTemporadas=8, avaliacao=..., atores=
 De qual série deseja buscar os episódios?
 game
 (busca as 8 temporadas na API e salva os episódios)
+
+4
+(informa o título ou parte dele)
+(exibe a série encontrada no banco)
+
+5
+Emilia Clarke
+(exibe as séries salvas em que o ator ou atriz aparece no elenco)
 ```
 
 *(Saída ilustrativa, os valores variam conforme os dados retornados pela API.)*
@@ -633,7 +732,8 @@ GET https://www.omdbapi.com/?t=gilmore+girls&season=1&apikey=SUA_CHAVE
 - **Requisições HTTP em Java**: `HttpClient`, `HttpRequest`, `HttpResponse` e tratamento de exceções.
 - **Jackson**: desserialização de JSON, `@JsonAlias`, `@JsonIgnoreProperties` e métodos genéricos.
 - **JPA/Hibernate**: `@Entity`, `@Id`, `@GeneratedValue`, `@Enumerated`, `@OneToMany`/`@ManyToOne`, `mappedBy`, `cascade` e `fetch`.
-- **Spring Data JPA**: `JpaRepository`, `save` e `findAll`.
+- **Spring Data JPA**: `JpaRepository`, `save`, `findAll` e **derived queries** (`findBy`, `Containing`, `IgnoreCase`),
+  com retorno `Optional` e `List`.
 - **PostgreSQL e SQL**: modelagem relacional, chave primária e estrangeira, restrições de unicidade.
 - **Java moderno**: `record`, text blocks, Streams (`flatMap`, `sorted`, `filter`), `Optional` e `enum` com atributos.
 - **Arquitetura**: separação em camadas, uso de DTO e organização por responsabilidade.
@@ -642,9 +742,11 @@ GET https://www.omdbapi.com/?t=gilmore+girls&season=1&apikey=SUA_CHAVE
 
 ## 🧭 Próximos passos
 
-- [ ] Adicionar consultas ao `SerieRepository` com **Derived Queries** e **JPQL** (busca por título, ator, categoria, top séries, episódios por trecho ou data)
+- [x] Consultas com **Derived Queries**: busca de séries por título e por ator
+- [ ] Novas consultas com **Derived Queries** e **JPQL** (categoria, top séries, filtro por temporadas e avaliação,
+  episódios por trecho ou data)
 - [ ] Adicionar e tratar **Exceptions** para consultas mal sucedidas no omdbAPI
-- [ ] Mover a busca de série por título para o banco, em vez de filtrar em memória
+- [ ] Usar `findByTituloContainingIgnoreCase` também na opção 2, que hoje filtra a lista de séries em memória
 - [ ] Externalizar a chave da API e as credenciais do banco em **variáveis de ambiente**
 - [ ] Adicionar **testes unitários** (JUnit 5 e Mockito)
 - [ ] Expor os dados via **API REST** com `@RestController`
