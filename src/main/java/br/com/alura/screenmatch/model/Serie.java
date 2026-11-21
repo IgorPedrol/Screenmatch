@@ -2,6 +2,8 @@ package br.com.alura.screenmatch.model;
 
 import br.com.alura.screenmatch.dto.SerieDTO;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,8 +17,11 @@ public class Serie {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String titulo;
 
+    @JdbcTypeCode(SqlTypes.SMALLINT)
+    @Column(nullable = false)
     private Integer totalTemporadas;
 
     private Double avaliacao;
