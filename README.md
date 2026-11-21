@@ -94,6 +94,13 @@ flowchart TB
 
     subgraph APP["Aplicação Spring Boot"]
         direction TB
+
+        subgraph INIT["Inicialização do banco"]
+            direction LR
+            MIG["📄 db/migration<br/>V1__screenmatch_db_migration.sql"]
+            FW["Flyway<br/>aplica migrations pendentes"]
+        end
+
         MAIN["ScreenmatchApplication<br/>CommandLineRunner"]
         P["principal<br/>Principal: menu e orquestração"]
 
@@ -122,11 +129,15 @@ flowchart TB
         end
     end
 
-    DB[("🐘 PostgreSQL")]
+    DB[("🐘 PostgreSQL<br/>series, episodios,<br/>flyway_schema_history")]
     API[["🌐 OMDb API"]]
 
+    MIG -->|"lê"| FW
+    FW -->|"1 - executa as migrations"| DB
+    MDL -.->|"2 - Hibernate valida o schema<br/>(ddl-auto=validate)"| DB
+    MAIN -->|"3 - injeta o repository e inicia"| P
+
     U <--> P
-    MAIN -->|"injeta o repository e inicia"| P
     P --> CA
     CA <-->|"HTTP GET"| API
     P --> CD
@@ -137,6 +148,8 @@ flowchart TB
     MDL -.->|"mapeadas por"| R1
 ```
 
+> **Ordem na inicialização:** o Flyway cria ou atualiza o schema (1), o Hibernate confere se as entidades batem com ele (2) e só então o `CommandLineRunner` abre o menu (3). Se a etapa 1 ou 2 falhar, a aplicação não chega a iniciar.
+
 ### Responsabilidade de cada camada
 
 | Pacote           | Classes                                         | Responsabilidade                                                                                                                    |
@@ -146,6 +159,7 @@ flowchart TB
 | **`dto`**        | `SerieDTO`, `TemporadaDTO`, `EpisodioDTO`       | *Records* imutáveis que espelham exatamente o formato da resposta da OMDb API                                                       |
 | **`model`**      | `Serie`, `Episodio`, `Categoria`                | Entidades JPA que representam as tabelas, mais o enum de gêneros do domínio                                                         |
 | **`repository`** | `SerieRepository`                               | Acesso ao banco via Spring Data JPA: métodos prontos do `JpaRepository` e consultas derivadas do nome do método (*derived queries*) |
+| **`db/migration`** (resources) | `V1__screenmatch_db_migration.sql` | Scripts SQL versionados que o Flyway aplica na inicialização, definindo o schema do banco |
 
 > **Por que separar DTO e Model?** O DTO espelha o contrato da API externa (nomes em inglês, números como `String`, datas como texto). A entidade representa o que o *meu* sistema armazena, já com tipos corretos (`Double`, `LocalDate`, `Categoria`). A conversão acontece nos construtores das entidades, isolando o domínio de mudanças na API.
 
