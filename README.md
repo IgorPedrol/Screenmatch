@@ -858,7 +858,7 @@ GET https://www.omdbapi.com/?t=gilmore+girls&season=1&apikey=SUA_CHAVE
 
 ## 👨‍💻 Autor
 
-**SEU NOME**
+**Igor Pedrol**
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/igorpedrol)
 [![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/IgorPedrol)
