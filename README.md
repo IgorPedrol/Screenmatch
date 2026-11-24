@@ -52,22 +52,26 @@ Neste projeto, pratiquei em conjunto:
 
 ## ✨ Funcionalidades
 
-O menu interativo no console oferece oito operações:
+O menu interativo no console oferece onze operações:
 
-| Opção | Funcionalidade                          | O que acontece                                                                                                                                                                                                                   |
-|:-----:|-----------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **1** | **Buscar séries**                       | Pergunta o nome da série, consulta a OMDb API, converte a resposta em uma entidade `Serie` e a salva no banco                                                                                                                    |
-| **2** | **Buscar episódios**                    | Lista as séries salvas, pergunta de qual buscar os episódios (aceita parte do nome, sem diferenciar maiúsculas de minúsculas), busca **todas as temporadas** na API, converte em entidades `Episodio` e salva vinculados à série |
-| **3** | **Listar séries buscadas**              | Lê todas as séries do banco e exibe título, temporadas, avaliação e gênero de cada uma                                                                                                                                           |
-| **4** | **Buscar série por título**             | Pesquisa no banco por parte do título, sem diferenciar maiúsculas de minúsculas, usando a *derived query* `findByTituloContainingIgnoreCase`                                                                                     |
-| **5** | **Buscar séries por ator**              | Recebe o nome (ou parte do nome) de um ator ou atriz e retorna, direto do banco, todas as séries salvas em que ele ou ela trabalhou, usando a *derived query* `findByAtoresContainingIgnoreCase`                                 |
-| **6** | **Listar as Top 5 séries**              | Exibe as 5 séries mais bem avaliadas, da maior para a menor nota, usando a *derived query* `findTop5ByOrderByAvaliacaoDesc`                                                                                                      |
-| **7** | **Buscar séries por categoria**         | Recebe o gênero **em português** (ex.: *Comédia*, *Ficção-Científica*), converte para o enum `Categoria` e lista as séries daquele gênero com a *derived query* `findByGenero`                                                   |
-| **8** | **Buscar séries com poucas temporadas** | Recebe um máximo de temporadas e uma avaliação mínima e retorna as séries que atendem aos dois critérios, da melhor para a pior avaliação, usando uma consulta **JPQL** (`@Query`)                                               |
-| **0** | **Sair**                                | Encerra a aplicação                                                                                                                                                                                                              |
+| Opção  | Funcionalidade                             | O que acontece                                                                                                                                                                                                                   |
+|:------:|--------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **1**  | **Buscar séries**                          | Pergunta o nome da série, consulta a OMDb API, converte a resposta em uma entidade `Serie` e a salva no banco                                                                                                                    |
+| **2**  | **Buscar episódios**                       | Lista as séries salvas, pergunta de qual buscar os episódios (aceita parte do nome, sem diferenciar maiúsculas de minúsculas), busca **todas as temporadas** na API, converte em entidades `Episodio` e salva vinculados à série |
+| **3**  | **Listar séries buscadas**                 | Lê todas as séries do banco e exibe título, temporadas, avaliação e gênero de cada uma                                                                                                                                           |
+| **4**  | **Buscar série por título**                | Pesquisa no banco por parte do título, sem diferenciar maiúsculas de minúsculas, usando a *derived query* `findByTituloContainingIgnoreCase`                                                                                     |
+| **5**  | **Buscar séries por ator**                 | Recebe o nome (ou parte do nome) de um ator ou atriz e retorna, direto do banco, todas as séries salvas em que ele ou ela trabalhou, usando a *derived query* `findByAtoresContainingIgnoreCase`                                 |
+| **6**  | **Listar as Top 5 séries**                 | Exibe as 5 séries mais bem avaliadas, da maior para a menor nota, usando a *derived query* `findTop5ByOrderByAvaliacaoDesc`                                                                                                      |
+| **7**  | **Buscar séries por categoria**            | Recebe o gênero **em português** (ex.: *Comédia*, *Ficção-Científica*), converte para o enum `Categoria` e lista as séries daquele gênero com a *derived query* `findByGenero`                                                   |
+| **8**  | **Buscar séries com poucas temporadas**    | Recebe um máximo de temporadas e uma avaliação mínima e retorna as séries que atendem aos dois critérios, da melhor para a pior avaliação, usando uma consulta **JPQL** (`@Query`)                                               |
+| **9**  | **Buscar episódios por trecho**            | Recebe parte do nome de um episódio e retorna os episódios cujo título contém o texto (sem diferenciar maiúsculas de minúsculas), exibindo a série e a temporada. Usa uma consulta **JPQL** com `JOIN`                           |
+| **10** | **Listar melhores episódios de uma série** | Busca a série por título (reaproveitando a opção 4), pergunta o tamanho do Top (ex.: 5 ou 10) e exibe os episódios mais bem avaliados daquela série. Usa JPQL com `ORDER BY` e `LIMIT`                                           |
+| **11** | **Buscar episódios a partir de uma data**  | Busca a série por título e lista os episódios lançados a partir de um ano informado. Usa JPQL com a função `YEAR`                                                                                                                |
+| **0**  | **Sair**                                   | Encerra a aplicação                                                                                                                                                                                                              |
 
-> 💡 A API só é chamada nas opções 1 e 2. As opções 3 a 8 consultam exclusivamente o banco de dados, por isso só
-> encontram séries que já foram buscadas pela opção 1.
+> 💡 A API só é chamada nas opções 1 e 2. As opções 3 a 11 consultam exclusivamente o banco de dados, por isso só
+> encontram séries que já foram buscadas pela opção 1. As opções 9, 10 e 11 dependem também dos episódios salvos pela
+> opção 2.
 >
 > 🛡️ O menu valida a entrada: se o usuário digitar algo que não seja um número, a aplicação avisa e exibe o menu
 > novamente.
@@ -186,6 +190,9 @@ flowchart TD
     MENU -->|"6"| S6["Top 5 séries"]
     MENU -->|"7"| S7["Buscar séries por categoria"]
     MENU -->|"8"| S8["Poucas temporadas<br/>e bem avaliadas"]
+    MENU -->|"9"| S9["Buscar episódios por trecho"]
+    MENU -->|"10"| S10["Melhores episódios<br/>de uma série"]
+    MENU -->|"11"| S11["Episódios a partir<br/>de uma data"]
     MENU -->|"0"| END(["🛑 Sair"])
     MENU -->|"entrada inválida"| INV["Avisa e exibe o menu de novo"]
 
@@ -207,6 +214,14 @@ flowchart TD
     DB7 --> OUT7["Exibe as séries do gênero"]
     S8 --> DB8[("Consulta JPQL<br/>temporadas e avaliação")]
     DB8 --> OUT8["Exibe da melhor<br/>para a pior avaliação"]
+    S9 --> DB9[("JPQL com JOIN<br/>título do episódio contém o trecho")]
+    DB9 --> OUT9["Exibe série, temporada<br/>e episódio"]
+    S10 --> BT10["Busca a série por título<br/>(mesma consulta da opção 4)"]
+    BT10 --> DB10[("JPQL: episódios da série<br/>ORDER BY avaliação, LIMIT")]
+    DB10 --> OUT10["Exibe o Top N episódios"]
+    S11 --> BT11["Busca a série por título<br/>(mesma consulta da opção 4)"]
+    BT11 --> DB11[("JPQL: episódios da série<br/>YEAR da data maior ou igual ao ano")]
+    DB11 --> OUT11["Exibe os episódios<br/>do ano em diante"]
 
     SAVE1 --> MENU
     SAVE2 --> MENU
@@ -216,6 +231,9 @@ flowchart TD
     OUT6 --> MENU
     OUT7 --> MENU
     OUT8 --> MENU
+    OUT9 --> MENU
+    OUT10 --> MENU
+    OUT11 --> MENU
     INV --> MENU
 ```
 
@@ -351,6 +369,49 @@ sequenceDiagram
     end
 
     P-->>U: Exibe as séries formatadas no console
+```
+
+### Opções 9, 10 e 11: consultas JPQL sobre os episódios
+
+Essas opções também consultam apenas o banco. As três usam **JPQL** com `JOIN` entre `Serie` e `Episodio`. As opções 10
+e 11 primeiro localizam a série pelo título, reaproveitando a consulta da opção 4, e depois passam a entidade `Serie`
+como parâmetro.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as Usuário
+    participant P as Principal
+    participant R as SerieRepository
+    participant DB as PostgreSQL
+
+    U->>P: Escolhe a opção 9, 10 ou 11
+
+    alt Opção 9, episódios por trecho do nome
+        U->>P: Informa parte do nome do episódio
+        P->>R: episodiosPorTrecho(trecho)
+        R->>DB: SELECT com JOIN entre series e episodios filtrando por titulo
+        DB-->>R: Episódios encontrados
+        R-->>P: List de Episodio
+    else Opção 10, melhores episódios de uma série
+        U->>P: Informa o título da série e o tamanho do Top
+        P->>R: findByTituloContainingIgnoreCase(nomeSerie)
+        R-->>P: Optional de Serie
+        P->>R: topEpisodiosPorSerie(serie, top)
+        R->>DB: SELECT dos episódios da série ordenados por avaliação com LIMIT
+        DB-->>R: Top N episódios
+        R-->>P: List de Episodio
+    else Opção 11, episódios a partir de uma data
+        U->>P: Informa o título da série e o ano
+        P->>R: findByTituloContainingIgnoreCase(nomeSerie)
+        R-->>P: Optional de Serie
+        P->>R: episodiosPorSerieEAno(serie, ano)
+        R->>DB: SELECT filtrando YEAR de data_lancamento maior ou igual ao ano
+        DB-->>R: Episódios encontrados
+        R-->>P: List de Episodio
+    end
+
+    P-->>U: Exibe os episódios formatados no console
 ```
 
 ---
@@ -722,6 +783,15 @@ public interface SerieRepository extends JpaRepository<Serie, Long> {
 
     @Query("SELECT s FROM Serie s WHERE s.totalTemporadas <= :totalTemporadas AND s.avaliacao >= :avaliacao ORDER BY avaliacao DESC")
     List<Serie> seriesPorTemporadaEAvaliacao(int totalTemporadas, double avaliacao);
+
+    @Query("SELECT e FROM Serie s JOIN s.episodios e WHERE e.titulo ILIKE %:trechoEpisodio%")
+    List<Episodio> episodiosPorTrecho(String trechoEpisodio);
+
+    @Query("SELECT e FROM Serie s JOIN s.episodios e WHERE s = :serie ORDER BY e.avaliacao DESC LIMIT :top")
+    List<Episodio> topEpisodiosPorSerie(Serie serie, int top);
+
+    @Query("SELECT e FROM Serie s JOIN s.episodios e WHERE s = :serie AND YEAR(e.dataLancamento) >= :anoLancamento ")
+    List<Episodio> episodiosPorSerieEAno(Serie serie, int anoLancamento);
 }
 ```
 
@@ -742,19 +812,31 @@ implementação manual.
 Como o campo `atores` guarda o elenco retornado pela OMDb em um único texto (ex.:
 `"Emilia Clarke, Peter Dinklage, ..."`), buscar por `"clarke"` ou por `"Emilia Clarke"` encontra a mesma série.
 
-**JPQL com `@Query`:** a opção 8 combina dois filtros e uma ordenação. O equivalente em *derived query* teria um nome
-enorme e difícil de ler (`findByTotalTemporadasLessThanEqualAndAvaliacaoGreaterThanEqualOrderByAvaliacaoDesc`), então a
-consulta foi escrita em JPQL. Ela trabalha com **entidades e atributos Java** (`Serie s`, `s.totalTemporadas`), e não
-com tabelas e colunas, e usa **parâmetros nomeados** (`:totalTemporadas`, `:avaliacao`) ligados aos parâmetros do
-método.
+**JPQL com `@Query`:** as consultas das opções 8 a 11 combinam filtros, ordenação, `JOIN` e funções. Em *derived query*,
+o nome do método ficaria enorme (por exemplo,
+`findByTotalTemporadasLessThanEqualAndAvaliacaoGreaterThanEqualOrderByAvaliacaoDesc`), e consultas que navegam pelo
+relacionamento série → episódios dificilmente caberiam em um nome legível. Em JPQL elas ficam explícitas. Elas trabalham
+com **entidades e atributos Java** (`Serie s`, `s.episodios`, `e.dataLancamento`), e não com tabelas e colunas, e usam *
+*parâmetros nomeados** (`:totalTemporadas`, `:serie`, `:top`...) ligados aos parâmetros do método.
 
-| Use                 | Quando                                                                          |
-|---------------------|---------------------------------------------------------------------------------|
-| **Derived Query**   | Filtros simples, com nome curto e legível                                       |
-| **JPQL (`@Query`)** | Vários filtros, ordenação ou regras que deixariam o nome do método longo demais |
+| Método                         | Opção | Recurso em destaque                                                                        |
+|--------------------------------|:-----:|--------------------------------------------------------------------------------------------|
+| `seriesPorTemporadaEAvaliacao` |   8   | Dois filtros (`<=` e `>=`) combinados com `AND` e `ORDER BY`                               |
+| `episodiosPorTrecho`           |   9   | `JOIN s.episodios e` e `ILIKE` para busca parcial sem diferenciar maiúsculas de minúsculas |
+| `topEpisodiosPorSerie`         |  10   | Entidade como parâmetro (`s = :serie`), `ORDER BY ... DESC` e `LIMIT :top`                 |
+| `episodiosPorSerieEAno`        |  11   | Função `YEAR(e.dataLancamento)` aplicada a um `LocalDate`                                  |
 
-O tipo de retorno também faz parte do contrato: `Optional<Serie>` para a busca por título (que pode não encontrar nada)
-e `List<Serie>` para as demais (que podem retornar várias séries).
+O `FROM Serie s JOIN s.episodios e` percorre o relacionamento `@OneToMany` pelo nome do atributo, sem escrever a
+condição `ON`: o Hibernate usa a chave estrangeira `serie_id`. `ILIKE` e `LIMIT` são recursos do **HQL**, a linguagem de
+consultas do Hibernate, que estende o JPQL.
+
+| Use                 | Quando                                                                                           |
+|---------------------|--------------------------------------------------------------------------------------------------|
+| **Derived Query**   | Filtros simples, com nome curto e legível                                                        |
+| **JPQL (`@Query`)** | Vários filtros, `JOIN`, funções, ordenação ou regras que deixariam o nome do método longo demais |
+
+O tipo de retorno também faz parte do contrato: `Optional<Serie>` para a busca por título (que pode não encontrar nada),
+`List<Serie>` para as buscas de séries e `List<Episodio>` para as de episódios.
 
 ### 11. Migrations versionadas com Flyway
 
@@ -814,9 +896,7 @@ switch (opcao) {
 A saída das séries usa `printf` com *text blocks*, o que deixa o formato legível no código e no console:
 
 ```java
-series.forEach(s ->System.out.
-
-printf(
+series.forEach(s -> System.out.printf(
         """
                 Série: %s
                 Temporadas: %d
@@ -824,17 +904,36 @@ printf(
                 Gênero: %s
                 -------------------------------%n""",
         s.getTitulo(),
-        s.
-
-getTotalTemporadas(),
-        s.
-
-getAvaliacao(),
-        s.
-
-getGenero()
+        s.getTotalTemporadas(),
+        s.getAvaliacao(),
+        s.getGenero()
 ));
 ```
+
+### 13. Reaproveitamento da busca por título
+
+As opções 10 e 11 reutilizam `buscarSeriePorTitulo()`. Ela exibe a série e guarda o resultado no campo
+`Optional<Serie> serieBusca`, que depois é passado como parâmetro às consultas de episódios:
+
+```java
+private void buscarEpisodiosAPartirDe() {
+
+    buscarSeriePorTitulo();
+
+    if (serieBusca.isPresent()) {
+        System.out.println("Listar episódios a partir de: ");
+        var anoLancamento = leitura.nextInt();
+        leitura.nextLine();
+
+        List<Episodio> episodiosAno =
+                repositorio.episodiosPorSerieEAno(serieBusca.get(), anoLancamento);
+        // ...
+    }
+}
+```
+
+Assim, a regra de "localizar a série" fica em um só lugar, e cada nova opção só precisa tratar da consulta que lhe
+interessa.
 
 ---
 
@@ -904,14 +1003,17 @@ No Windows: `mvnw.cmd spring-boot:run`. Também é possível executar a classe `
 ## 💻 Exemplo de uso
 
 ```text
-1 - Buscar séries
-2 - Buscar episódios
-3 - Listar séries buscadas
-4 - Buscar série por título
-5 - Buscar séries por ator
-6 - Listar as Top 5 Séries
-7 - Buscar Séries por categoria
-8 - Buscar Séries com poucas temporadas
+ 1 - Buscar séries
+ 2 - Buscar episódios
+ 3 - Listar séries buscadas
+ 4 - Buscar série por título
+ 5 - Buscar séries por ator
+ 6 - Listar as Top 5 Séries
+ 7 - Buscar Séries por categoria
+ 8 - Buscar Séries com poucas temporadas
+ 9 - Buscar Episódios por trecho
+10 - Listar Melhores Episódios de uma Série
+11 - Buscar Episódios a partir de uma Data
 
 0 - Sair
 
@@ -937,8 +1039,6 @@ game
 4
 Escolha uma série pelo nome:
 game
-
-Dados da série:
 -------------------------------
 Série: Game of Thrones
 Temporadas: 8
@@ -984,10 +1084,50 @@ Deseja ver Séries com avaliação maior que:
 As Melhores Séries com até 5 temporadas:
 
 (exibe as séries da melhor para a pior avaliação)
+
+9
+Qual o nome do episódio para busca?
+winter
+-------------------------------
+Série: Game of Thrones
+Temporada: 1
+Episódio: 1 - Winter Is Coming
+-------------------------------
+
+10
+Escolha uma série pelo nome:
+game
+(exibe os dados da série, como na opção 4)
+Qual o tamanho do Top? (Top 5, 10)
+5
+
+=== Top 5 episódios de Game of Thrones ===
+#1
+Temporada: 6
+Episódio: 9 - Battle of the Bastards
+Avaliação: 9,9 ⭐
+-------------------------------
+(demais episódios do Top)
+
+11
+Escolha uma série pelo nome:
+game
+(exibe os dados da série, como na opção 4)
+Listar episódios a partir de:
+2017
+
+=== Episódios de Game of Thrones a partir de: 2017  ===
+Temporada: 7
+Episódio: 1 - Dragonstone
+Lançado em: 2017-07-16
+Avaliação: ... ⭐
+-------------------------------
+(demais episódios lançados a partir do ano informado)
 ```
 
 *(Saída ilustrativa: os valores variam conforme os dados retornados pela API, e o separador decimal segue a configuração
-regional do sistema.)*
+regional do sistema. As opções 9, 10 e 11 só retornam resultados para séries cujos episódios foram salvos pela opção
+2.)*
 
 ### Formato das requisições feitas à OMDb API
 
@@ -1006,13 +1146,14 @@ GET https://www.omdbapi.com/?t=gilmore+girls&season=1&apikey=SUA_CHAVE
 - **Jackson**: desserialização de JSON, `@JsonAlias`, `@JsonIgnoreProperties` e métodos genéricos.
 - **JPA/Hibernate**: `@Entity`, `@Id`, `@GeneratedValue`, `@Enumerated`, `@OneToMany`/`@ManyToOne`, `mappedBy`, `cascade` e `fetch`.
 - **Spring Data JPA**: `JpaRepository`, `save`, `findAll`, **derived queries** (`findBy`, `Containing`, `IgnoreCase`,
-  `Top5`, `OrderBy...Desc`) e consultas **JPQL** com `@Query` e parâmetros nomeados, com retorno `Optional` e `List`.
+  `Top5`, `OrderBy...Desc`) e consultas **JPQL** com `@Query`, parâmetros nomeados, `JOIN` entre entidades, entidade
+  como parâmetro, funções (`YEAR`), `ILIKE` e `LIMIT`, com retorno `Optional` e `List`.
 - **Flyway**: migrations versionadas (`V1__...sql`), tabela `flyway_schema_history`, regras de imutabilidade e
   integração com o Spring Boot (`flyway-core` e `flyway-database-postgresql`).
 - **Hibernate `ddl-auto=validate`**: validar o schema criado por migrations e mapear tipos específicos com
   `@JdbcTypeCode(SqlTypes.SMALLINT)`.
-- **PostgreSQL e SQL**: modelagem relacional, chave primária e estrangeira, tipos (`SMALLINT`, `DOUBLE PRECISION`) e
-  índices.
+- **PostgreSQL e SQL**: modelagem relacional, chave primária e estrangeira, tipos (`SMALLINT`, `DOUBLE PRECISION`),
+  índices e `JOIN` entre tabelas.
 - **Java moderno**: `record`, text blocks, *switch expressions*, Streams (`flatMap`, `filter`), `Optional`, `printf` e
   `enum` com múltiplos atributos.
 - **Interação com o usuário**: leitura segura com `Scanner.nextLine()` e tratamento de `NumberFormatException` no menu.
@@ -1028,9 +1169,9 @@ GET https://www.omdbapi.com/?t=gilmore+girls&season=1&apikey=SUA_CHAVE
 - [x] Externalizar a chave da API da OMDb (variável de ambiente)
 - [ ] Criar a migration `V2` com restrições de unicidade adequadas (série por título e episódio por série, temporada e
   número)
-- [ ] Novas consultas com **Derived Queries** e **JPQL** (episódios por trecho do título, top episódios por série,
-  episódios a partir de uma data)
-- [ ] Tratar entradas inválidas nas opções 7 e 8 (categoria inexistente e valores não numéricos)
+- [x] Consultas **JPQL** com `JOIN` para episódios: por trecho do título, Top N por série e a partir de um ano
+- [ ] Tratar entradas inválidas nas opções 7, 8, 10 e 11 (categoria inexistente, valores não numéricos e Top maior que o
+  número de episódios salvos)
 - [ ] Adicionar e tratar **Exceptions** para consultas mal sucedidas no omdbAPI
 - [ ] Usar `findByTituloContainingIgnoreCase` também na opção 2, que hoje filtra a lista de séries em memória
 - [ ] Externalizar as credenciais do banco em **variáveis de ambiente**
