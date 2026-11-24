@@ -1163,13 +1163,8 @@ GET https://www.omdbapi.com/?t=gilmore+girls&season=1&apikey=SUA_CHAVE
 
 ## 🧭 Próximos passos
 
-- [x] Consultas com **Derived Queries**: busca por título, ator, gênero e Top 5
-- [x] Consulta com **JPQL** (`@Query`): séries por máximo de temporadas e avaliação mínima
-- [x] Versionar o schema do banco com **Flyway**
-- [x] Externalizar a chave da API da OMDb (variável de ambiente)
 - [ ] Criar a migration `V2` com restrições de unicidade adequadas (série por título e episódio por série, temporada e
   número)
-- [x] Consultas **JPQL** com `JOIN` para episódios: por trecho do título, Top N por série e a partir de um ano
 - [ ] Tratar entradas inválidas nas opções 7, 8, 10 e 11 (categoria inexistente, valores não numéricos e Top maior que o
   número de episódios salvos)
 - [ ] Adicionar e tratar **Exceptions** para consultas mal sucedidas no omdbAPI
@@ -1186,7 +1181,7 @@ GET https://www.omdbapi.com/?t=gilmore+girls&season=1&apikey=SUA_CHAVE
 
 ## 👨‍💻 Autor
 
-**SEU NOME**
+**Igor Pedrol**
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/igorpedrol)
 [![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/IgorPedrol)
